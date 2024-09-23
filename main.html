@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #planetMenu {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background-color: rgba(0, 31, 63, 0.8);
+      padding: 15px;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #infoBox {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background-color: rgba(0, 31, 63, 0.8);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      color: white;
+      font-size: 14px;
+      max-width: 300px;
+    }
+
+    .planet-button {
+      border: 3px solid #04AA6D;
+      background-color: #04AA6D;
+      color: white;
+      padding: 12px 24px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .planet-button:hover {
+      border-color: #04AA6D;
+      background-color: transparent;
+      color: #04AA6D;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(4, 170, 109, 0.5);
+    }
+
+    .planet-button:focus {
+      box-shadow: 0 0 0 3px rgba(4, 170, 109, 0.5);
+    }
+  </style>
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+          "jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+
+<body>
+  <div id="planetMenu">
+    <button class="planet-button" data-planet="SolarSystem">Solar System</button>
+    <button class="planet-button" data-planet="Mercury">Mercury</button>
+    <button class="planet-button" data-planet="Venus">Venus</button>
+    <button class="planet-button" data-planet="Earth">Earth</button>
+    <button class="planet-button" data-planet="Mars">Mars</button>
+    <button class="planet-button" data-planet="Jupiter">Jupiter</button>
+    <button class="planet-button" data-planet="Saturn">Saturn</button>
+    <button class="planet-button" data-planet="Uranus">Uranus</button>
+    <button class="planet-button" data-planet="Neptune">Neptune</button>
+  </div>
+  <div id="infoBox">
+    <h3>The Solar System</h3>
+    <p>Our solar system consists of the Sun and everything bound to it by gravity – the planets Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune; dwarf planets such as Pluto; dozens of moons; and millions of asteroids, comets, and meteoroids.</p>
+    <p>The Sun, the heart of our solar system, contains 99.8% of the system's known mass and influences everything around it with its immense gravitational pull.</p>
+    <p>Click on a planet to learn more about it!</p>
+  </div>
+  <script type="module" src="index.js"></script>
+</body>
+
+</html>
