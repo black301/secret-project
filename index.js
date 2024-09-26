@@ -5,51 +5,38 @@ const startButton = document.getElementById('startButton');
 const loadingScreen = document.getElementById('loadingScreen');
 const loadingProgress = document.getElementById('loadingProgress');
 const loadingBar = document.getElementById('loadingBar');
-const loadingImage = document.querySelector('#loadingScreen img');
 const solarSystemContainer = document.getElementById('solarSystem');
 const planetMenu = document.getElementById('planetMenu');
 const infoBox = document.getElementById('infoBox');
 
 document.addEventListener('DOMContentLoaded', () => {
+  createStars();
   startButton.addEventListener('click', () => {
     startButton.style.display = 'none';
-    loadingImage.style.display = 'block';
     loadingBar.style.display = 'block';
+    loadingBar.style.opacity = '1';
+    animateProgress();
     setTimeout(() => {
-      loadingImage.style.opacity = '1';
-      loadingBar.style.opacity = '1';
       initScene();
-    }, 100);
+    }, 2000); // wait for 2 seconds to simulate loading
   });
 });
 
+function createStars() {
+  const numStars = 200;
+  for (let i = 0; i < numStars; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.width = `${Math.random() * 3}px`;
+    star.style.height = star.style.width;
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${Math.random() * 100}%`;
+    star.style.animationDelay = `${Math.random() * 2}s`;
+    loadingScreen.appendChild(star);
+  }
+}
+
 function initScene() {
-  const loadingManager = new THREE.LoadingManager();
-  let totalItems = 0;
-  let loadedItems = 0;
-
-  loadingManager.onStart = function(url, itemsLoaded, itemsTotal) {
-    totalItems = itemsTotal;
-  };
-
-  loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
-    loadedItems = itemsLoaded;
-    const progress = (loadedItems / totalItems) * 100;
-    loadingProgress.style.width = `${progress}%`;
-  };
-
-  loadingManager.onLoad = function() {
-    setTimeout(() => {
-      loadingScreen.style.opacity = '0';
-      setTimeout(() => {
-        loadingScreen.style.display = 'none';
-        solarSystemContainer.style.opacity = '1';
-        planetMenu.style.opacity = '1';
-        infoBox.style.opacity = '1';
-      }, 1000);
-    }, 1000);
-  };
-
   const w = window.innerWidth;
   const h = window.innerHeight;
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -74,7 +61,7 @@ function initScene() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(0, 100, 700);
   const scene = new THREE.Scene();
-  const loader = new THREE.TextureLoader(loadingManager);
+  const loader = new THREE.TextureLoader();
 
   const starTexture = loader.load('./textures/MOON/8k_stars_milky_way.jpg');
   const starGeo = new THREE.SphereGeometry(1000, 64, 64);
@@ -145,9 +132,7 @@ function initScene() {
   const orbitMeshes = [];
 
   planetData.forEach(data => {
-    const planetGeo = new THREE.SphereGeometry(data.radius, 64, 
-
- 64);
+    const planetGeo = new THREE.SphereGeometry(data.radius, 64, 64);
     const planetMat = new THREE.MeshStandardMaterial({
       map: loader.load(data.texture),
     });
@@ -209,8 +194,6 @@ function initScene() {
 
   let selectedPlanet = null;
   let isFocused = false;
-
-  const infoBox = document.getElementById('infoBox');
 
   let cameraStartPos = new THREE.Vector3();
   let cameraTargetPos = new THREE.Vector3();
@@ -335,7 +318,7 @@ function initScene() {
     button.addEventListener('mouseenter', () => {
       const planetName = button.getAttribute('data-planet');
       if (planetName !== 'SolarSystem') {
-        highlightOrbit(planetName);
+        highlightOrbit(planetName );
       }
     });
 
@@ -386,4 +369,23 @@ function initScene() {
   }
 
   animate();
+}
+
+function animateProgress() {
+  let progress = 0;
+  const intervalId = setInterval(() => {
+    if (progress < 100) {
+      progress += 1;
+      loadingProgress.style.width = `${progress}%`;
+    } else {
+      clearInterval(intervalId);
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        solarSystemContainer.style.opacity = '1';
+        planetMenu.style.opacity = '1';
+        infoBox.style.opacity = '1';
+      }, 1000);
+    }
+  }, 20);
 }
