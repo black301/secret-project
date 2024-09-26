@@ -375,7 +375,7 @@ function animateProgress() {
   let progress = 0;
   const intervalId = setInterval(() => {
     if (progress < 100) {
-      progress += 1;
+      progress += 0.7;
       loadingProgress.style.width = `${progress}%`;
     } else {
       clearInterval(intervalId);
