@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     animateProgress();
     setTimeout(() => {
       initScene();
-    }, 2000); // wait for 2 seconds to simulate loading
+    }, 1500); // wait for 2 seconds to simulate loading
   });
 });
 
@@ -375,7 +375,7 @@ function animateProgress() {
   let progress = 0;
   const intervalId = setInterval(() => {
     if (progress < 100) {
-      progress += 0.7;
+      progress += 0.9;
       loadingProgress.style.width = `${progress}%`;
     } else {
       clearInterval(intervalId);
@@ -385,7 +385,7 @@ function animateProgress() {
         solarSystemContainer.style.opacity = '1';
         planetMenu.style.opacity = '1';
         infoBox.style.opacity = '1';
-      }, 1000);
+      }, 1500);
     }
   }, 20);
 }
