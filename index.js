@@ -1,6 +1,15 @@
+//#region imports
 import * as THREE from 'three';
 import { OrbitControls } from 'jsm/controls/OrbitControls.js';
+//#endregion
 
+
+
+
+
+
+
+//#region HTML staff
 const startButton = document.getElementById('startButton');
 const loadingScreen = document.getElementById('loadingScreen');
 const loadingProgress = document.getElementById('loadingProgress');
@@ -36,7 +45,37 @@ function createStars() {
   }
 }
 
+
+function animateProgress() {
+  let progress = 0;
+  const intervalId = setInterval(() => {
+    if (progress < 100) {
+      progress += 0.9;
+      loadingProgress.style.width = `${progress}%`;
+    } else {
+      clearInterval(intervalId);
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        solarSystemContainer.style.opacity = '1';
+        planetMenu.style.opacity = '1';
+        infoBox.style.opacity = '1';
+      }, 1500);
+    }
+  }, 20);
+}
+
+//#endregion
+
+
+
+
+
+
+//#region scene && camera && renderer && background
 function initScene() {
+
+
   const w = window.innerWidth;
   const h = window.innerHeight;
   const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -57,23 +96,30 @@ function initScene() {
   const fov = 75;
   const aspect = w / h;
   const near = 0.1;
-  const far = 2000;
+  const far = 40000;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(0, 100, 700);
   const scene = new THREE.Scene();
   const loader = new THREE.TextureLoader();
-
-  const starTexture = loader.load('./textures/MOON/8k_stars_milky_way.jpg');
-  const starGeo = new THREE.SphereGeometry(1000, 64, 64);
+    
+  const starTexture = loader.load('./textures/Planets/Background@3x.jpg');
+  const starGeo = new THREE.SphereGeometry(30000, 64, 64);
   const starMat = new THREE.MeshBasicMaterial({
     map: starTexture,
     side: THREE.BackSide,
   });
   const starSphere = new THREE.Mesh(starGeo, starMat);
   scene.add(starSphere);
+  //#endregion
 
+
+
+
+  
+
+
+//#region size and distance 
   let unitSize = 1;
-
   let Earth_size = 3959;
   let sun_size = unitSize * (864950 / Earth_size);
   let Mercury_size = unitSize * (1516 / Earth_size);
@@ -94,6 +140,15 @@ function initScene() {
   let Uranus_distance = 19.14 * Au;
   let Neptune_distance = 30.20 * Au;
 
+
+  //#endregion
+  
+  
+  
+  
+  
+  
+  //#region  sun && light && planets
   const sunGeo = new THREE.SphereGeometry(sun_size, 64, 64);
   const sunMat = new THREE.MeshBasicMaterial({
     map: loader.load('./textures/Planets/8k_sun.jpg'),
@@ -141,8 +196,16 @@ function initScene() {
     planetMesh.position.x = data.distance;
     planetMesh.castShadow = true;
     planetMesh.receiveShadow = true;
+//#endregion
+    
+ 
 
-    // Create orbit line
+
+
+
+
+    
+//#region  Create orbit line && rings
     const orbitGeometry = new THREE.BufferGeometry();
     const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
     const orbitPoints = [];
@@ -173,6 +236,16 @@ function initScene() {
       planetMesh.add(ringMesh);
     }
 
+//#endregion
+
+
+
+
+
+
+
+
+//#region  planet data && controls
     planetMesh.userData = {
       name: data.name,
       distance: data.distance,
@@ -196,32 +269,24 @@ function initScene() {
   controls.screenSpacePanning = false;
   controls.minDistance = 10;
   controls.maxDistance = 1000;
-
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
-
   let selectedPlanet = null;
   let isFocused = false;
 
   let cameraStartPos = new THREE.Vector3();
   let cameraTargetPos = new THREE.Vector3();
   let cameraLookAtPos = new THREE.Vector3();
+  let cameraLookAtPos2 = new THREE.Vector3();
+//#endregion
 
-  function onMouseClick(event) {
-    event.preventDefault();
 
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(mouse, camera);
 
-    const intersects = raycaster.intersectObjects(planets);
-    if (intersects.length > 0) {
-      const clickedPlanet = intersects[0].object;
-      focusOnPlanet(clickedPlanet);
-    }
-  }
 
+
+
+
+
+ //#region  plant info && focus on planet && resetView 
   function showPlanetInfo(planet) {
     infoBox.innerHTML = `
       <h3>${planet.userData.name}</h3>
@@ -256,48 +321,89 @@ function initScene() {
   }
 
   function updateCameraPosition(deltaTime) {
-    if (isFocused && selectedPlanet) {
-      cameraTargetPos.set(
-        selectedPlanet.position.x + selectedPlanet.userData.viewDistance,
-        selectedPlanet.position.y + selectedPlanet.userData.viewDistance * 0.3,
-        selectedPlanet.position.z + selectedPlanet.userData.viewDistance
-      );
-      cameraLookAtPos.copy(selectedPlanet.position);
+    if (isFocused && selectedPlanet && sunMesh) {
+        // Calculate vector from sun to planet
+        const direction = new THREE.Vector3();
+        direction.subVectors(selectedPlanet.position, sunMesh.position).normalize();
 
-      camera.position.lerp(cameraTargetPos, deltaTime * 2);
-      camera.lookAt(cameraLookAtPos);
+        // Set the camera position behind the planet by extending the vector in the opposite direction
+        const cameraDistance = selectedPlanet.userData.viewDistance; // Adjust distance if needed
+        const cameraPosition = new THREE.Vector3();
+        cameraPosition.copy(selectedPlanet.position).addScaledVector(direction, cameraDistance);
+
+        // Adjust the camera's target to be at the planet
+        cameraTargetPos.set(cameraPosition.x, cameraPosition.y + selectedPlanet.userData.viewDistance * 0.3, cameraPosition.z);
+        cameraLookAtPos.copy(selectedPlanet.position);
+
+        // Smoothly move the camera to the new position
+        camera.position.lerp(cameraTargetPos, deltaTime * 2);
+        camera.lookAt(cameraLookAtPos);
     }
-  }
+}
 
   function resetView() {
     if (selectedPlanet) {
       selectedPlanet.userData.isStopped = false;
     }
-
+  
     selectedPlanet = null;
     isFocused = false;
-
-    cameraStartPos.set(0, 100, 700);
-    cameraTargetPos.copy(cameraStartPos);
-    cameraLookAtPos.set(0, 0, 0);
-
-    camera.position.copy(cameraStartPos);
-    camera.lookAt(cameraLookAtPos);
-
-    controls.enabled = true;
-
+  
+    // Set the camera start position closer to the Sun (assuming the Sun is at (0, 0, 0))
+    const cameraStartPos = new THREE.Vector3(0, 0, 300); // Adjust starting point near the Sun
+    const cameraEndPos = new THREE.Vector3(0, 200, 800); // Final position further away to zoom out
+    const cameraLookAtPos = new THREE.Vector3(0, 0, 0); // Look at the Sun's position (center)
+  
+    const initialCameraPos = camera.position.clone();
+  
+    // Animation parameters
+    const duration = 1000; // 3 seconds for zooming out and moving to the final position
+    const startTime = performance.now();
+  
+    function animateCamera() {
+      const currentTime = performance.now();
+      const elapsed = currentTime - startTime;
+      const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
+  
+      // Interpolating the camera position from the Sun's vicinity to the zoomed-out position
+      camera.position.lerpVectors(cameraStartPos, cameraEndPos, t);
+      camera.lookAt(cameraLookAtPos);
+  
+      if (t < 1) {
+        requestAnimationFrame(animateCamera);
+      } else {
+        controls.enabled = true; // Enable controls after animation completes
+      }
+    }
+  
+    // Start the animation
+    controls.enabled = false; // Disable controls during the animation
+    animateCamera();
+  
     infoBox.innerHTML = `
       <h3>The Solar System</h3>
       <p>Our solar system consists of the Sun and everything bound to it by gravity – the planets Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune; dwarf planets such as Pluto; dozens of moons; and millions of asteroids, comets, and meteoroids.</p>
       <p>The Sun, the heart of our solar system, contains 99.8% of the system's known mass and influences everything around it with its immense gravitational pull.</p>
       <p>Click on a planet to learn more about it!</p>
     `;
-
+  
     orbitLines.forEach((orbitLine) => {
       orbitLine.material.color.setHex(0xffffff);
     });
   }
+  
+  //#endregion
+  
+  
 
+
+
+
+
+
+
+
+//#region  highlight orbit && planetButtons click && sound
   function highlightOrbit(planetName) {
     orbitLines.forEach((orbitLine, index) => {
       if (planetData[index].name === planetName) {
@@ -316,7 +422,7 @@ function initScene() {
     camera.updateProjectionMatrix();
   });
 
-  window.addEventListener('click', onMouseClick);
+  // window.addEventListener('click', onMouseClick);
 
   const planetButtons = document.querySelectorAll('.planet-button');
   planetButtons.forEach(button => {
@@ -354,7 +460,24 @@ function initScene() {
   });
   var sound = new Audio('');
   const clock = new THREE.Clock();
+  //#endregion
+  
+  
 
+
+
+
+
+
+
+
+
+
+
+
+  
+//#region animate
+  
   function animate() {
     const deltaTime = clock.getDelta();
 
@@ -380,22 +503,4 @@ function initScene() {
 
   animate();
 }
-
-function animateProgress() {
-  let progress = 0;
-  const intervalId = setInterval(() => {
-    if (progress < 100) {
-      progress += 0.9;
-      loadingProgress.style.width = `${progress}%`;
-    } else {
-      clearInterval(intervalId);
-      loadingScreen.style.opacity = '0';
-      setTimeout(() => {
-        loadingScreen.style.display = 'none';
-        solarSystemContainer.style.opacity = '1';
-        planetMenu.style.opacity = '1';
-        infoBox.style.opacity = '1';
-      }, 1500);
-    }
-  }, 20);
-}
+//#endregion
