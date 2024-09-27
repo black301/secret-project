@@ -252,9 +252,6 @@ function initScene() {
       selectedPlanet.position.z + distance
     );
     cameraLookAtPos.copy(selectedPlanet.position);
-    // cameraLookAtPos.set.x=0;
-    // cameraLookAtPos.set.y=0;
-    // cameraLookAtPos.set.x=0;
     controls.enabled = false;
   }
 
