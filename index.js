@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingBar.style.opacity = '1';
     animateProgress();
     setTimeout(() => {
-      initScene();
+      
     }, 1500);
   });
 });
@@ -36,7 +36,7 @@ function createStars() {
   }
 }
 
-const w = window.innerWidth;
+  const w = window.innerWidth;
   const h = window.innerHeight;
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(w, h);
@@ -51,11 +51,11 @@ const w = window.innerWidth;
   const near = 0.1;
   const far = 20000; // Increased from 2000 to 20000
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  cameraStartPos.set(0, 150, 1500);
+  camera.position.set(0, 50, 1500);
   const scene = new THREE.Scene();
   const loader = new THREE.TextureLoader();
   const starTexture = loader.load('./textures/MOON/8k_stars_milky_way.jpg');
-  const starGeo = new THREE.SphereGeometry(1000, 64, 64);
+  const starGeo = new THREE.SphereGeometry(3000, 64, 64);
   const starMat = new THREE.MeshBasicMaterial({
     map: starTexture,
     side: THREE.BackSide,
@@ -404,7 +404,6 @@ function updateCameraPosition(deltaTime) {
   }
 
   animate();
-}
 
 function animateProgress() {
   let progress = 0;
