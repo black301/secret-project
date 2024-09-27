@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     animateProgress();
     setTimeout(() => {
       initScene();
-    }, 1500); // wait for 2 seconds to simulate loading
+    }, 1500);
   });
 });
 
@@ -129,7 +129,7 @@ function initScene() {
   ];
 
   const planets = [];
-  const orbitMeshes = [];
+  const orbitLines = [];
 
   planetData.forEach(data => {
     const planetGeo = new THREE.SphereGeometry(data.radius, 64, 64);
@@ -142,12 +142,18 @@ function initScene() {
     planetMesh.castShadow = true;
     planetMesh.receiveShadow = true;
 
-    const orbitGeometry = new THREE.RingGeometry(data.distance - 0.05, data.distance + 0.05, 64);
-    const orbitMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
-    const orbitMesh = new THREE.Mesh(orbitGeometry, orbitMaterial);
-    orbitMesh.rotation.x = Math.PI / 2;
-    scene.add(orbitMesh);
-    orbitMeshes.push(orbitMesh);
+    // Create orbit line
+    const orbitGeometry = new THREE.BufferGeometry();
+    const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+    const orbitPoints = [];
+    for (let i = 0; i <= 64; i++) {
+      const angle = (i / 64) * Math.PI * 2;
+      orbitPoints.push(new THREE.Vector3(Math.cos(angle) * data.distance, 0, Math.sin(angle) * data.distance));
+    }
+    orbitGeometry.setFromPoints(orbitPoints);
+    const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
+    scene.add(orbitLine);
+    orbitLines.push(orbitLine);
 
     const planetLight = new THREE.HemisphereLight(data.color, 0x000000, 0.9);
     planetLight.position.set(0, data.radius, 0);
@@ -175,8 +181,9 @@ function initScene() {
       originalPosition: new THREE.Vector3(data.distance, 0, 0),
       originalAngle: Math.random() * Math.PI * 2,
       angle: Math.random() * Math.PI * 2,
-      viewDistance: data.radius * 3,
-      beat: data.beat  // Add this line to include the audio file
+      viewDistance: data.radius * 5,
+      beat: data.beat,
+      isStopped: false
     };
 
     planets.push(planetMesh);
@@ -232,20 +239,22 @@ function initScene() {
     }
 
     selectedPlanet = planet;
+    selectedPlanet.userData.isStopped = true;
     isFocused = true;
     showPlanetInfo(selectedPlanet);
     highlightOrbit(selectedPlanet.userData.name);
 
-    // console.log(beat); 
     cameraStartPos.copy(camera.position);
     const distance = selectedPlanet.userData.viewDistance;
     cameraTargetPos.set(
-      selectedPlanet.position.x + distance,
+      sunMesh.position.y + distance,
       selectedPlanet.position.y + distance * 0.3,
       selectedPlanet.position.z + distance
     );
-    cameraLookAtPos.copy(selectedPlanet.position);
-
+    // cameraLookAtPos.copy(selectedPlanet.position);
+    cameraLookAtPos.set.x=0;
+    cameraLookAtPos.set.y=0;
+    cameraLookAtPos.set.x=0;
     controls.enabled = false;
   }
 
@@ -287,20 +296,17 @@ function initScene() {
       <p>Click on a planet to learn more about it!</p>
     `;
 
-    orbitMeshes.forEach((orbitMesh) => {
-      orbitMesh.material.opacity = 0.5;
-      orbitMesh.material.color.setHex(0xffffff);
+    orbitLines.forEach((orbitLine) => {
+      orbitLine.material.color.setHex(0xffffff);
     });
   }
 
   function highlightOrbit(planetName) {
-    orbitMeshes.forEach((orbitMesh, index) => {
+    orbitLines.forEach((orbitLine, index) => {
       if (planetData[index].name === planetName) {
-        orbitMesh.material.opacity = 1;
-        orbitMesh.material.color.setHex(0x1E90FF);
+        orbitLine.material.color.setHex(0x1E90FF);
       } else {
-        orbitMesh.material.opacity = 0.5;
-        orbitMesh.material.color.setHex(0xffffff);
+        orbitLine.material.color.setHex(0xffffff);
       }
     });
   }
@@ -341,15 +347,15 @@ function initScene() {
         const planet = planets.find(p => p.userData.name === planetName);
         if (planet) {
           sound.pause();
-          sound = new Audio(planet.userData.beat);  // Fix here
-          console.log(planet.userData.beat);  // Logging the correct beat
-          sound.play();  // Play sound
+          sound = new Audio(planet.userData.beat);
+          console.log(planet.userData.beat);
+          sound.play();
           focusOnPlanet(planet);
         }
       }
     });
   });
-  var sound=new Audio('');
+  var sound = new Audio('');
   const clock = new THREE.Clock();
 
   function animate() {
