@@ -1,13 +1,11 @@
 //#region imports
 import * as THREE from 'three';
 import { OrbitControls } from 'jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'jsm/postprocessing/ShaderPass.js';
 //#endregion
-
-
-
-
-
-
 
 //#region HTML staff
 const startButton = document.getElementById('startButton');
@@ -45,7 +43,6 @@ function createStars() {
   }
 }
 
-
 function animateProgress() {
   let progress = 0;
   const intervalId = setInterval(() => {
@@ -64,22 +61,18 @@ function animateProgress() {
     }
   }, 20);
 }
-
 //#endregion
-
-
-
-
-
 
 //#region scene && camera && renderer && background
 function initScene() {
-
-
   const w = window.innerWidth;
   const h = window.innerHeight;
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(w, h);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   if (solarSystemContainer) {
     solarSystemContainer.appendChild(renderer.domElement);
@@ -88,17 +81,13 @@ function initScene() {
     return;
   }
 
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
   const fov = 75;
   const aspect = w / h;
   const near = 0.1;
   const far = 40000;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-  camera.position.set(0, 100, 700);
+  camera.position.set(0, 200, 1000);
+
   const scene = new THREE.Scene();
   const loader = new THREE.TextureLoader();
 
@@ -110,13 +99,55 @@ function initScene() {
   });
   const starSphere = new THREE.Mesh(starGeo, starMat);
   scene.add(starSphere);
+
+  // Layers for selective bloom
+  const BLOOM_LAYER = 1;
+  const ENTIRE_SCENE = 0;
+
+  // Post-processing setup
+  const renderScene = new RenderPass(scene, camera);
+
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 1.5, 0.4, 0.85);
+  bloomPass.threshold = 0.1;
+  bloomPass.strength = 1;
+  bloomPass.radius = 0.2;
+
+  const bloomComposer = new EffectComposer(renderer);
+  bloomComposer.renderToScreen = false;
+  bloomComposer.addPass(renderScene);
+  bloomComposer.addPass(bloomPass);
+
+  const finalPass = new ShaderPass(
+    new THREE.ShaderMaterial({
+      uniforms: {
+        baseTexture: { value: null },
+        bloomTexture: { value: bloomComposer.renderTarget2.texture }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D baseTexture;
+        uniform sampler2D bloomTexture;
+        varying vec2 vUv;
+        void main() {
+          gl_FragColor = ( texture2D( baseTexture, vUv ) + vec4( 1.0 ) * texture2D( bloomTexture, vUv ) );
+        }
+      `,
+      defines: {}
+    }), "baseTexture"
+  );
+  finalPass.needsSwap = true;
+
+  const finalComposer = new EffectComposer(renderer);
+  finalComposer.addPass(renderScene);
+  finalComposer.addPass(finalPass);
+
   //#endregion
-
-
-
-
-
-
 
   //#region size and distance 
   let unitSize = 1;
@@ -139,14 +170,7 @@ function initScene() {
   let Saturn_distance = 9.58 * Au;
   let Uranus_distance = 19.14 * Au;
   let Neptune_distance = 30.20 * Au;
-
-
   //#endregion
-
-
-
-
-
 
   //#region  sun && light && planets
   const sunGeo = new THREE.SphereGeometry(sun_size, 64, 64);
@@ -156,6 +180,8 @@ function initScene() {
     emissiveIntensity: 1,
   });
   const sunMesh = new THREE.Mesh(sunGeo, sunMat);
+  sunMesh.layers.set(ENTIRE_SCENE);
+  sunMesh.layers.enable(BLOOM_LAYER);
   scene.add(sunMesh);
 
   const sunlight = new THREE.PointLight(0xffffff, 10, 1000);
@@ -173,14 +199,14 @@ function initScene() {
 
   let dis = 300;
   const planetData = [
-    { name: 'Mercury', radius: Mercury_size, distance: dis + 20, orbitalPeriod: 88, rotationPeriod: 58.65, texture: './textures/Planets/8k_mercury.jpg', color: 0xaaaaaa, beat: './audio/Mercury.mp3', inclination: 7.0, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Venus', radius: Venus_size, distance: dis + 30, orbitalPeriod: 224.7, rotationPeriod: -243, texture: './textures/Planets/8k_venus_surface.jpg', color: 0xffd700, beat: './audio/Venus.mp3', inclination: 3.4, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Earth', radius: unitSize, distance: dis + 40, orbitalPeriod: 365.25, rotationPeriod: 1, texture: './textures/Earth/8k_earth_daymap.jpg', color: 0x00ff00, beat: './audio/Earth.mp3', inclination: 0.0, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Mars', radius: Mars_size, distance: dis + 55, orbitalPeriod: 687, rotationPeriod: 1.03, texture: './textures/Planets/8k_mars.jpg', color: 0xff4500, beat: './audio/Mars.mp3', inclination: 1.9, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Jupiter', radius: Jupiter_size, distance: dis + 100, orbitalPeriod: 4333, rotationPeriod: 0.41, texture: './textures/Planets/8k_jupiter.jpg', color: 0xffa500, beat: './audio/Jupiter.mp3', inclination: 1.3, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Saturn', radius: Saturn_size, distance: dis + 138, orbitalPeriod: 10759, rotationPeriod: 0.44, texture: './textures/Planets/8k_saturn.jpg', color: 0xffd700, hasRing: true, beat: './audio/Saturn.mp3', inclination: 2.5, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Uranus', radius: Uranus_size, distance: dis + 176, orbitalPeriod: 30687, rotationPeriod: -0.72, texture: './textures/Planets/2k_uranus.jpg', color: 0x00ffff, beat: './audio/Uranus.mp3', inclination: 0.8, initialAngle: 0, orbitColor: 0xff0bbaa },
-    { name: 'Neptune', radius: Neptune_size, distance: dis + 200, orbitalPeriod: 60190, rotationPeriod: 0.67, texture: './textures/Planets/2k_neptune.jpg', color: 0x0000ff, beat: './audio/Neptune.mp3', inclination: 1.8, initialAngle: 0, orbitColor: 0xff0bbaa }
+    { name: 'Mercury', radius: Mercury_size, distance: dis + 50, orbitalPeriod: 88, rotationPeriod: 58.65, texture: './textures/Planets/8k_mercury.jpg', color: 0xaaaaaa, beat: './audio/Mercury.mp3', inclination: 7.0, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Venus', radius: Venus_size, distance: dis + 70, orbitalPeriod: 224.7, rotationPeriod: -243, texture: './textures/Planets/8k_venus_surface.jpg', color: 0xffd700, beat: './audio/Venus.mp3', inclination: 3.4, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Earth', radius: unitSize, distance: dis + 100, orbitalPeriod: 365.25, rotationPeriod: 1, texture: './textures/Earth/8k_earth_daymap.jpg', color: 0x00ff00, beat: './audio/Earth.mp3', inclination: 0.0, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Mars', radius: Mars_size, distance: dis + 200, orbitalPeriod: 687, rotationPeriod: 1.03, texture: './textures/Planets/8k_mars.jpg', color: 0xff4500, beat: './audio/Mars.mp3', inclination: 1.9, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Jupiter', radius: Jupiter_size, distance: dis + 250, orbitalPeriod: 4333, rotationPeriod: 0.41, texture: './textures/Planets/8k_jupiter.jpg', color: 0xffa500, beat: './audio/Jupiter.mp3', inclination: 1.3, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Saturn', radius: Saturn_size, distance: dis + 300, orbitalPeriod: 10759, rotationPeriod: 0.44, texture: './textures/Planets/8k_saturn.jpg', color: 0xffd700, hasRing: true, beat: './audio/Saturn.mp3', inclination: 2.5, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Uranus', radius: Uranus_size, distance: dis + 350, orbitalPeriod: 30687, rotationPeriod: -0.72, texture: './textures/Planets/2k_uranus.jpg', color: 0x00ffff, beat: './audio/Uranus.mp3', inclination: 0.8, initialAngle: 0, orbitColor: 0xff0bbaa },
+    { name: 'Neptune', radius: Neptune_size, distance: dis + 400, orbitalPeriod: 60190, rotationPeriod: 0.67, texture: './textures/Planets/2k_neptune.jpg', color: 0x0000ff, beat: './audio/Neptune.mp3', inclination: 1.8, initialAngle: 0, orbitColor: 0xff0bbaa }
   ];
   const planets = [];
   const orbitMeshes = [];
@@ -195,18 +221,15 @@ function initScene() {
     const planetMesh = new THREE.Mesh(planetGeo, planetMat);
     planetMesh.castShadow = true;
     planetMesh.receiveShadow = true;
-
+    planetMesh.layers.set(ENTIRE_SCENE);
 
     const orbitObject = new THREE.Object3D();
     scene.add(orbitObject);
 
-
     const pivotObject = new THREE.Object3D();
     orbitObject.add(pivotObject);
 
-
     pivotObject.rotation.x = data.inclination * (Math.PI / 180);
-
 
     planetMesh.userData = {
       name: data.name,
@@ -216,14 +239,13 @@ function initScene() {
       angle: Math.random() * Math.PI * 2,
       viewDistance: data.radius * 5,
       inclination: data.inclination,
-      beat: data.beat // Make sure this property exists and is properly assigned
-
+      beat: data.beat
     };
     planetMesh.position.x = data.distance;
     pivotObject.add(planetMesh);
     const orbitGeometry = new THREE.BufferGeometry();
     const orbitPoints = [];
-    const orbitSegments = 600; // Number of points to make a smooth circle
+    const orbitSegments = 600;
 
     for (let i = 0; i <= orbitSegments; i++) {
       const angle = (i / orbitSegments) * Math.PI * 2;
@@ -233,12 +255,10 @@ function initScene() {
     }
     orbitGeometry.setFromPoints(orbitPoints);
 
-
     const orbitMaterial = new THREE.LineBasicMaterial({ color: data.orbitColor });
     const orbitLine = new THREE.Line(orbitGeometry, orbitMaterial);
     pivotObject.add(orbitLine);
 
-    // Add ring for Saturn
     if (data.name === 'Saturn') {
       const innerRadius = data.radius * 1.5;
       const outerRadius = data.radius * 2.3;
@@ -263,13 +283,12 @@ function initScene() {
     orbitMeshes.push(orbitObject);
   });
 
-
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.09;
   controls.screenSpacePanning = false;
   controls.minDistance = 10;
-  controls.maxDistance = 1000;
+  controls.maxDistance = 1500;
   let selectedPlanet = null;
   let isFocused = false;
 
@@ -277,14 +296,6 @@ function initScene() {
   let cameraTargetPos = new THREE.Vector3();
   let cameraLookAtPos = new THREE.Vector3();
   //#endregion
-
-
-
-
-
-
-
-
 
   //#region  plant info && focus on planet && resetView 
   function showPlanetInfo(planet) {
@@ -308,7 +319,6 @@ function initScene() {
     selectedPlanet = planet;
     isFocused = true;
     showPlanetInfo(selectedPlanet);
-    // highlightOrbit(selectedPlanet.userData.name);
 
     cameraStartPos.copy(camera.position);
     const distance = selectedPlanet.userData.viewDistance;
@@ -330,12 +340,10 @@ function initScene() {
       const sunToPlanet = new THREE.Vector3().subVectors(planetWorldPosition, sunMesh.position);
       const distance = selectedPlanet.userData.viewDistance;
 
-      // Calculate the angle to position the camera
-      const angle = Math.PI / 6; // 30 degrees, adjust as needed
+      const angle = Math.PI / 6;
       const offsetY = Math.sin(angle);
-      const offsetXZ = Math.cos(angle) * distance*2;
+      const offsetXZ = Math.cos(angle) * distance * 2;
 
-      // Position the camera
       cameraTargetPos.copy(planetWorldPosition).add(
         sunToPlanet.normalize().multiplyScalar(offsetXZ)
       );
@@ -346,7 +354,6 @@ function initScene() {
       camera.position.lerp(cameraTargetPos, deltaTime);
       camera.lookAt(cameraLookAtPos);
 
-      // Ensure the camera is not too close to the sun
       const minSunDistance = sun_size * 0.6;
       const cameraToSunVector = new THREE.Vector3().subVectors(camera.position, sunMesh.position);
       if (cameraToSunVector.length() < minSunDistance) {
@@ -355,6 +362,7 @@ function initScene() {
       }
     }
   }
+
   function resetView() {
     if (selectedPlanet) {
       selectedPlanet.userData.isStopped = false;
@@ -363,35 +371,31 @@ function initScene() {
     selectedPlanet = null;
     isFocused = false;
 
-    // Set the camera start position closer to the Sun (assuming the Sun is at (0, 0, 0))
-    const cameraStartPos = new THREE.Vector3(0, 0, 300); // Adjust starting point near the Sun
-    const cameraEndPos = new THREE.Vector3(0, 200, 800); // Final position further away to zoom out
-    const cameraLookAtPos = new THREE.Vector3(0, 0, 0); // Look at the Sun's position (center)
+    const cameraStartPos = new THREE.Vector3(0, 0, 300);
+    const cameraEndPos = new THREE.Vector3(0, 200, 800);
+    const cameraLookAtPos = new THREE.Vector3(0, 0, 0);
 
     const initialCameraPos = camera.position.clone();
 
-    // Animation parameters
-    const duration = 3000; // 3 seconds for zooming out and moving to the final position
+    const duration = 3000;
     const startTime = performance.now();
 
     function animateCamera() {
       const currentTime = performance.now();
       const elapsed = currentTime - startTime;
-      const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
+      const t = Math.min(elapsed / duration, 1);
 
-      // Interpolating the camera position from the Sun's vicinity to the zoomed-out position
       camera.position.lerpVectors(cameraStartPos, cameraEndPos, t);
       camera.lookAt(cameraLookAtPos);
 
       if (t < 1) {
         requestAnimationFrame(animateCamera);
       } else {
-        controls.enabled = true; // Enable controls after animation completes
+        controls.enabled = true;
       }
     }
 
-    // Start the animation
-    controls.enabled = false; // Disable controls during the animation
+    controls.enabled = false;
     animateCamera();
 
     infoBox.innerHTML = `
@@ -401,52 +405,37 @@ function initScene() {
       <p>Click on a planet to learn more about it!</p>
     `;
   }
-
   //#endregion
 
-
-
-
-
-
-
-
-
-
   //#region  highlight orbit && planetButtons click && sound
-
   window.addEventListener('resize', () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
     renderer.setSize(w, h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    bloomComposer.setSize(w, h);
+    finalComposer.setSize(w, h);
   });
 
-  // window.addEventListener('click', onMouseClick);
-  
-  
-  
-  let sound = null; // Initialize the sound object
+  let sound = null;
   const planetButtons = document.querySelectorAll('.planet-button');
-
 
   planetButtons.forEach(button => {
     button.addEventListener('click', () => {
       const planetName = button.getAttribute('data-planet');
       if (planetName === 'SolarSystem') {
         resetView();
-        if (sound) sound.pause(); // Ensure any existing sound is paused
+        if (sound) sound.pause();
       }
-      else{
+      else {
         const planet = planets.find(p => p.userData.name === planetName);
         if (planet) {
           if (sound) {
-            sound.pause();   // Pause the previous sound
-            sound.currentTime = 0;  // Reset it to the beginning
+            sound.pause();
+            sound.currentTime = 0;
           }
-          sound = new Audio(planet.userData.beat); // Load new sound
-          // Play the new sound after it's fully loaded
+          sound = new Audio(planet.userData.beat);
           sound.play().catch((error) => {
             console.error('Error playing sound:', error);
           });
@@ -459,32 +448,16 @@ function initScene() {
   const clock = new THREE.Clock();
   //#endregion
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   //#region animate
-
   function animate() {
     const deltaTime = clock.getDelta();
 
     planets.forEach(planet => {
       if (!planet.userData.isStopped) {
-        planet.userData.angle += deltaTime / planet.userData.orbitalPeriod * Math.PI * 2;
+        planet.userData.angle += (deltaTime / planet.userData.orbitalPeriod) * Math.PI * 2;
         planet.position.x = planet.userData.distance * Math.cos(planet.userData.angle);
         planet.position.z = planet.userData.distance * Math.sin(planet.userData.angle);
       }
-
       planet.rotation.y += (deltaTime / planet.userData.rotationPeriod) * Math.PI * 2 * 0.01;
     });
 
@@ -494,8 +467,18 @@ function initScene() {
       controls.update();
     }
 
-    renderer.render(scene, camera);
+    renderScenes();
     requestAnimationFrame(animate);
+  }
+
+  function renderScenes() {
+    // Render bloom effect
+    // camera.layers.set(BLOOM_LAYER);
+    // bloomComposer.render();
+
+    // Render final scene with bloom
+    camera.layers.set(ENTIRE_SCENE);
+    finalComposer.render();
   }
 
   animate();
