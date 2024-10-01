@@ -103,6 +103,84 @@ body {
         border-image: linear-gradient(115deg, #4fcf70, #fad648, #a767e5, #12bcfe, #44ce7b) 1;
     }
 }
+.space-button {
+    position: relative;
+    padding: 15px 30px;
+    background: linear-gradient(45deg, #001f3f, #0077be);
+    color: #e6f3ff;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 119, 190, 0.5);
+    position: absolute;
+    bottom: 35px;
+    right: 60px;
+    overflow: hidden;
+}
+
+.space-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px rgba(0, 191, 255, 0.7);
+}
+
+.space-button::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(135, 206, 250, 0.3) 0%, transparent 70%);
+    transform: scale(0);
+    transition: transform 0.5s ease-out;
+}
+
+.space-button:hover::before {
+    transform: scale(1);
+}
+
+.space-button span {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.space-button .icon {
+    margin-right: 10px;
+    font-size: 24px;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.space-button::after {
+    content: '★';
+    position: absolute;
+    top: 20%;
+    left: 10%;
+    font-size: 10px;
+    color: #87cefa;
+    animation: twinkle 1.5s infinite;
+}
+
+.space-button::before {
+    content: '★';
+    position: absolute;
+    bottom: 20%;
+    right: 10%;
+    font-size: 12px;
+    color: #87cefa;
+    animation: twinkle 2s infinite 0.5s;
+}
 
 #loadingScreen {
     position: fixed;
