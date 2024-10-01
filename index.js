@@ -15,6 +15,8 @@ const loadingBar = document.getElementById('loadingBar');
 const solarSystemContainer = document.getElementById('solarSystem');
 const planetMenu = document.getElementById('planetMenu');
 const infoBox = document.getElementById('infoBox');
+const spacebutton = document.getElementById('spacebutton');
+const list = document.getElementById('list');
 
 document.addEventListener('DOMContentLoaded', () => {
   createStars();
@@ -56,7 +58,9 @@ function animateProgress() {
         loadingScreen.style.display = 'none';
         solarSystemContainer.style.opacity = '1';
         planetMenu.style.opacity = '1';
-        infoBox.style.opacity = '1';
+        spacebutton.style.opacity='1';
+        // infoBox.style.opacity = '1';
+        list.style.opacity = '1';
       }, 1500);
     }
   }, 20);
