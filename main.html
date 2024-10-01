@@ -1,190 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Solar System Adventure</title>
-  <link rel="shortcut icon" type="x-icon" href="./textures/planet-earth.png">
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-
-    #planetMenu {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-      background-color: rgba(0, 31, 63, 0.8);
-      padding: 15px;
-      border-radius: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      opacity: 0;
-      transition: opacity 1s ease-in-out;
-    }
-
-    #infoBox {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-      background-color: rgba(0, 31, 63, 0.8);
-      padding: 15px;
-      border-radius: 15px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      color: white;
-      font-size: 14px;
-      max-width: 300px;
-      opacity: 0;
-      transition: opacity 1s ease-in-out;
-    }
-
-    .planet-button {
-      border: 3px solid #1E90FF;
-      background-color: #1E90FF;
-      color: white;
-      padding: 12px 24px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 30px;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      outline: none;
-    }
-
-    .planet-button:hover {
-      border-color: #1E90FF;
-      background-color : transparent;
-      color: #1E90FF;
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(30, 144, 255, 0.5);
-    }
-
-    .planet-button:focus {
-      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.5);
-    }
-
-    #loadingScreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: black;
-      background-size: cover;
-      background-position: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 1s ease-in-out;
-    }
-
-    #loadingScreen h1 {
-      color: #ffffff  ;
-      font-size: 36px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    #loadingBar {
-      width: 300px;
-      height: 30px;
-      background-color: #ffffff;
-      border-radius: 15px;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease-in-out;
-    }
-
-    #loadingProgress {
-      width: 0%;
-      height: 100%;
-      background-color: #1E90FF;
-      transition: width 0.5s ease-out;
-    }
-
-    #startButton {
-      padding: 15px 30px;
-      font-size: 24px;
-      background-color: #1E90FF;
-      color: white;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      width: 300px;
-    }
-
-    #startButton:hover {
-      background-color: #4169E1;
-      transform: scale(1.1);
-    }
-
-    #solarSystem {
-      opacity: 0;
-      transition: opacity 1s ease-in-out;
-    }
-
-    .star {
-      position: absolute;
-      background-color: white;
-      border-radius: 50%;
-      animation: twinkle 2s infinite alternate;
-    }
-
-    @keyframes twinkle {
-      0% { opacity: 0.2; }
-      100% { opacity: 1; }
-    }
-  </style >
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-        "jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-      }
-    }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Adventure</title>
+    <link rel="shortcut icon" type="x-icon" href="./textures/planet-earth.png">
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+            "jsm/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+          }
+        }
+    </script>
 </head>
-
 <body>
-  <div id="planetMenu">
-    <button class="planet-button" data-planet="SolarSystem">Solar System</button>
-    <button class="planet-button" data-planet="Mercury">Mercury</button>
-    <button class="planet-button" data-planet="Venus">Venus</button>
-    <button class="planet-button" data-planet="Earth">Earth</button>
-    <button class="planet-button" data-planet="Mars">Mars</button>
-    <button class="planet-button" data-planet="Jupiter">Jupiter</button>
-    <button class="planet-button" data-planet="Saturn">Saturn</button>
-    <button class="planet-button" data-planet="Uranus">Uranus</button>
-    <button class="planet-button" data-planet="Neptune">Neptune</button>
-  </div>
-  <div id="infoBox">
-    <h3>The Solar System</h3>
-    <p>Our solar system consists of the Sun and everything bound to it by gravity – the planets Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune; dwarf planets such as Pluto; dozens of moons; and millions of asteroids, comets, and meteoroids.</p>
-    <p>The Sun, the heart of our solar system, contains 99.8% of the system's known mass and influences everything around it with its immense gravitational pull.</p>
-    <p>Click on a planet to learn more about it!</p>
-  </div>
-  <div id="loadingScreen">
-    <h1>Prepare for an<br>Interstellar Adventure!</h1>
-    <button id="startButton">Let's Explore 🚀</button>
-    <div id="loadingBar" style="display: none;">
-      <div id="loadingProgress"></div>
-    </div>
-  </div>
-  <div id="solarSystem"></div>
-  <script type="module" src="index.js"></script>
-</body>
+    <nav id="planetMenu">
+        <ul>
+            <li><a href="#" class="planet-button" data-planet="SolarSystem"><img src="images/mercury.png" alt="SolarSystem"> SolarSystem</a></li>
+            <li><a href="#" class="planet-button" data-planet="Mercury"><img src="images/mercury.png" alt="Mercury"> Mercury</a></li>
+            <li><a href="#" class="planet-button" data-planet="Venus"><img src="images/venus.png" alt="Venus"> Venus</a></li>
+            <li><a href="#" class="planet-button" data-planet="Earth"><img src="images/planet-earth.png" alt="Earth"> Earth</a></li>
+            <li><a href="#" class="planet-button" data-planet="Mars"><img src="images/mars.png" alt="Mars"> Mars</a></li>
+            <li><a href="#" class="planet-button" data-planet="Jupiter"><img src="images/jupiter.png" alt="Jupiter"> Jupiter</a></li>
+            <li><a href="#" class="planet-button" data-planet="Saturn"><img src="images/saturn.png" alt="Saturn"> Saturn</a></li>
+            <li><a href="#" class="planet-button" data-planet="Uranus"><img src="images/uranus.png" alt="Uranus"> Uranus</a></li>
+            <li><a href="#" class="planet-button" data-planet="Neptune"><img src="images/neptune.png" alt="Neptune"> Neptune</a></li>
+        </ul>
+    </nav>
 
+    <div id="loadingScreen">
+        <h1>Prepare for an<br>Interstellar Adventure!</h1>
+        <button id="startButton">Let's Explore 🚀</button>
+        <div id="loadingBar" style="display: none;">
+            <div id="loadingProgress"></div>
+        </div>
+    </div>
+    <div id="solarSystem"></div>
+    <button class="learn-btn">Learn More</button>
+    <script type="module" src="index.js"></script>
+</body>
 </html>
