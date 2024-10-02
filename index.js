@@ -115,7 +115,7 @@ function initScene() {
   const scene = new THREE.Scene();
   const loader = new THREE.TextureLoader();
 
-  const starTexture = loader.load('./textures/Planets/Background@3x.jpg');
+  const starTexture = loader.load('./textures/Planets/silver_and_gold_nebulae_1.png');
   const starGeo = new THREE.SphereGeometry(1000000, 100, 100 ); // Increased from 3000 to 50000
   const starMat = new THREE.MeshBasicMaterial({
     map: starTexture,
@@ -339,7 +339,7 @@ const distanceScale = 10;
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.09;
+  controls.dampingFactor = 0.05;
   controls.screenSpacePanning = false;
   controls.minDistance = 100;
   controls.maxDistance = 1000000;
@@ -353,106 +353,125 @@ const distanceScale = 10;
   //#endregion
 
   //#region  plant info && focus on planet && resetView 
-  function showPlanetInfo(planet) {
-    infoBox.innerHTML = `
-      <h3>${planet.userData.name}</h3>
-      <p>Distance from Sun: ${planet.userData.distance} million km</p>
-      <p>Orbital Period: ${planet.userData.orbitalPeriod} days</p>
-      <p>Rotation Period: ${planet.userData.rotationPeriod} days</p>
-    `;
-  }
+  // function showPlanetInfo(planet) {
+  //   infoBox.innerHTML = `
+  //     <h3>${planet.userData.name}</h3>
+  //     <p>Distance from Sun: ${planet.userData.distance} million km</p>
+  //     <p>Orbital Period: ${planet.userData.orbitalPeriod} days</p>
+  //     <p>Rotation Period: ${planet.userData.rotationPeriod} days</p>
+  //   `;
+  // }
 
   let animationInProgress = false;
 
-function focusOnPlanet(planet) {
-  planet.userData.isStopped = true;
-
-  if (selectedPlanet === planet) return;
-
-  if (selectedPlanet) {
-    selectedPlanet.userData.isStopped = false;
-    selectedPlanet.children[0].visible = false; // Hide previous planet outline
-  }
-
-  selectedPlanet = planet;
-  isFocused = true;
-  showPlanetInfo(selectedPlanet);
-
-  planet.children[0].visible = true; // Show current planet outline
-
-  cameraStartPos.copy(camera.position);
-  const distance = selectedPlanet.userData.viewDistance;
-  const planetWorldPosition = new THREE.Vector3();
-  selectedPlanet.getWorldPosition(planetWorldPosition);
+  function focusOnPlanet(planet) {
+    planet.userData.isStopped = true;
   
-  const sunToPlanet = new THREE.Vector3().subVectors(planetWorldPosition, sunMesh.position);
-  const angle = Math.PI / 6;
-  const offsetY = Math.sin(angle) * distance;
-  const offsetXZ = Math.cos(angle) * distance * 2;
-
-  cameraTargetPos.copy(planetWorldPosition).add(
-    sunToPlanet.normalize().multiplyScalar(offsetXZ)
-  );
-  cameraTargetPos.y += offsetY;
-
-  cameraLookAtPos.copy(planetWorldPosition);
-
-  // Disable controls during animation
-  controls.enabled = false;
-  animationInProgress = true;
-
-  // Start the animation
-  const startTime = performance.now();
-  const duration = 5000; // 2 seconds
-
-  function animateCamera(time) {
-    const elapsed = time - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-
-    camera.position.lerpVectors(cameraStartPos, cameraTargetPos, progress);
-    camera.lookAt(cameraLookAtPos);
-
-    if (progress < 1) {
-      requestAnimationFrame(animateCamera);
-    } else {
-      // Animation complete, enable controls and zooming
-      controls.enabled = true;
-      controls.enableZoom = true;
-      controls.minDistance = selectedPlanet.geometry.parameters.radius * 1.5;
-      controls.maxDistance = selectedPlanet.userData.viewDistance * 2;
-      controls.target.copy(planetWorldPosition);
-      animationInProgress = false;
+    if (selectedPlanet === planet) return;
+  
+    if (selectedPlanet) {
+      selectedPlanet.userData.isStopped = false;
+      selectedPlanet.children[0].visible = true; // Ensure the outline of the previously selected planet is visible
     }
-  }
-
-  requestAnimationFrame(animateCamera);
-}
-
-function updateCameraPosition(deltaTime) {
-  if (isFocused && selectedPlanet && !animationInProgress) {
+  
+    selectedPlanet = planet;
+    isFocused = true;
+  
+    planet.children[0].visible = true;
+  
+    cameraStartPos.copy(camera.position);
+    const distance = selectedPlanet.userData.viewDistance;
     const planetWorldPosition = new THREE.Vector3();
     selectedPlanet.getWorldPosition(planetWorldPosition);
     
-    // Update the controls target to follow the planet
-    controls.target.copy(planetWorldPosition);
-    
-    // Let OrbitControls handle the camera position
-    controls.update();
+    const sunToPlanet = new THREE.Vector3().subVectors(planetWorldPosition, sunMesh.position);
+    const angle = Math.PI / 6;
+    const offsetY = Math.sin(angle) * distance;
+    const offsetXZ = Math.cos(angle) * distance * 2;
+  
+    cameraTargetPos.copy(planetWorldPosition).add(
+      sunToPlanet.normalize().multiplyScalar(offsetXZ)
+    );
+    cameraTargetPos.y += offsetY;
+  
+    cameraLookAtPos.copy(planetWorldPosition);
+  
+    controls.enabled = false;
+    animationInProgress = true;
+  
+    const startTime = performance.now();
+    const duration = 3000; // 3 seconds
+  
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+  
+    function animateCamera(time) {
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutCubic(progress);
+  
+      camera.position.lerpVectors(cameraStartPos, cameraTargetPos, easedProgress);
+      
+      const currentLookAt = new THREE.Vector3();
+      currentLookAt.lerpVectors(controls.target, cameraLookAtPos, easedProgress);
+      camera.lookAt(currentLookAt);
+  
+      if (progress < 1) {
+        requestAnimationFrame(animateCamera);
+      } else {
+        controls.enabled = true;
+        controls.enableZoom = true;
+        controls.minDistance = selectedPlanet.geometry.parameters.radius * 1.5;
+        controls.maxDistance = selectedPlanet.userData.viewDistance * 2;
+        controls.target.copy(planetWorldPosition);
+        animationInProgress = false;
+      }
+  
+      // Render during animation
+      renderScenes();
+    }
+  
+    requestAnimationFrame(animateCamera);
+  }
 
-    // Hide outline when camera is close to the planet
-    const distanceToPlanet = camera.position.distanceTo(planetWorldPosition);
-    if (distanceToPlanet < selectedPlanet.geometry.parameters.radius * 2) {
-      selectedPlanet.children[0].visible = false; // Hide outline
-    } else {
-      selectedPlanet.children[0].visible = false; // Show outline if not close
+  function updateCameraPosition(deltaTime) {
+    if (isFocused && selectedPlanet && !animationInProgress) {
+      const planetWorldPosition = new THREE.Vector3();
+      selectedPlanet.getWorldPosition(planetWorldPosition);
+      
+      // Update the controls target to follow the planet
+      controls.target.copy(planetWorldPosition);
+      
+      // Let OrbitControls handle the camera position
+      controls.update();
+  
+      // Show or hide outline based on distance to the planet
+      const distanceToPlanet = camera.position.distanceTo(planetWorldPosition);
+      const outlineVisibilityThreshold = selectedPlanet.geometry.parameters.radius * 3;
+      
+      if (distanceToPlanet < outlineVisibilityThreshold) {
+        selectedPlanet.children[0].visible = false; // Hide outline when close
+      } else {
+        selectedPlanet.children[0].visible = false; // Show outline when far enough
+      }
     }
   }
-}
-function resetView() {
-  if (selectedPlanet) {
-    selectedPlanet.userData.isStopped = false;
-    selectedPlanet.children[0].visible = false; // Hide outline of previously selected planet
+  function resetView() {
+    if (selectedPlanet) {
+      selectedPlanet.userData.isStopped = false;
+      selectedPlanet.children[0].visible = true; // Show outline of previously selected planet
+    }
+
+  // Stop any playing sound
+  if (sound) {
+    sound.pause();
+    sound.currentTime = 0;
+    sound = null; // Reset the sound variable
   }
+
+  // Remove highlight from all buttons
+  highlightButton(null);
 
   selectedPlanet = null;
   isFocused = false;
@@ -501,14 +520,6 @@ function resetView() {
   }
 
   requestAnimationFrame(animateCamera);
-
-  // Update info box
-  infoBox.innerHTML = `
-    <h3>The Solar System</h3>
-    <p>Our solar system consists of the Sun and everything bound to it by gravity – the planets Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune; dwarf planets such as Pluto; dozens of moons; and millions of asteroids, comets, and meteoroids.</p>
-    <p>The Sun, the heart of our solar system, contains 99.8% of the system's known mass and influences everything around it with its immense gravitational pull.</p>
-    <p>Click on a planet to learn more about it!</p>
-  `;
 }
   //#endregion
 
@@ -524,31 +535,44 @@ function resetView() {
   });
 
   let sound = null;
-  const planetButtons = document.querySelectorAll('.planet-button');
+const planetButtons = document.querySelectorAll('.planet-button');
 
-  planetButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const planetName = button.getAttribute('data-planet');
-      if (planetName === 'SolarSystem') {
-        resetView();
-        if (sound) sound.pause();
+function highlightButton(button) {
+  // Remove highlight from all buttons
+  planetButtons.forEach(btn => btn.classList.remove('highlighted'));
+  
+  // Add highlight to the clicked button
+  if (button) {
+    button.classList.add('highlighted');
+  }
+}
+
+planetButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const planetName = button.getAttribute('data-planet');
+    
+    // Stop any currently playing sound
+    if (sound) {
+      sound.pause();
+      sound.currentTime = 0;
+    }
+
+    if (planetName === 'SolarSystem') {
+      resetView();
+      highlightButton(null); // Remove highlight when resetting view
+    } else {
+      const planet = planets.find(p => p.userData.name === planetName);
+      if (planet) {
+        sound = new Audio(planet.userData.beat);
+        sound.play().catch((error) => {
+          console.error('Error playing sound:', error);
+        });
+        focusOnPlanet(planet);
+        highlightButton(button);
       }
-      else {
-        const planet = planets.find(p => p.userData.name === planetName);
-        if (planet) {
-          if (sound) {
-            sound.pause();
-            sound.currentTime = 0;
-          }
-          sound = new Audio(planet.userData.beat);
-          sound.play().catch((error) => {
-            console.error('Error playing sound:', error);
-          });
-          focusOnPlanet(planet);
-        }
-      }
-    });
+    }
   });
+});
 
   const clock = new THREE.Clock();
   //#endregion
