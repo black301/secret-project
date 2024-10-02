@@ -60,7 +60,7 @@ function animateProgress() {
         planetMenu.style.opacity = '1';
         spacebutton.style.opacity='1';
         // infoBox.style.opacity = '1';
-        list.style.opacity = '1';
+        // list.style.opacity = '1';
       }, 1500);
     }
   }, 20);
@@ -127,7 +127,8 @@ function initScene() {
   // Layers for selective bloom
   const BLOOM_LAYER = 1;
   const ENTIRE_SCENE = 0;
-
+  const BLOOM_LAYER_planet = 0;
+  const ENTIRE_SCENE_planet = 0;
   // Post-processing setup
   const renderScene = new RenderPass(scene, camera);
 
@@ -223,16 +224,33 @@ function initScene() {
 
   let dis = 3000; // Increased from 300
 const distanceScale = 10;
-  const planetData = [
-    { name: 'Mercury', radius: Mercury_size, distance: dis + 200 * distanceScale, orbitalPeriod: 88, rotationPeriod: 58.65, texture: './textures/Planets/8k_mercury.jpg', color: 0xaaaaaa, beat: './audio/Mercury.mp3', inclination: 7.0, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Venus', radius: Venus_size, distance: dis + 1500 * distanceScale, orbitalPeriod: 224.7, rotationPeriod: -243, texture: './textures/Planets/8k_venus_surface.jpg', color: 0xffd700, beat: './audio/Venus.mp3', inclination: 3.4, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Earth', radius: unitSize,distance: dis + 2500 * distanceScale, orbitalPeriod: 365.25, rotationPeriod: 1, texture: './textures/Earth/8k_earth_daymap.jpg', color: 0x00ff00, beat: './audio/Earth.mp3', inclination: 0.0, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Mars', radius: Mars_size, distance: dis + 3500 , orbitalPeriod: 687, rotationPeriod: 1.03, texture: './textures/Planets/8k_mars.jpg', color: 0xff4500, beat: './audio/Mars.mp3', inclination: 1.9, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Jupiter', radius: Jupiter_size, distance: dis + 5500 * distanceScale, orbitalPeriod: 4333, rotationPeriod: 0.41, texture: './textures/Planets/8k_jupiter.jpg', color: 0xffa500, beat: './audio/Jupiter.mp3', inclination: 1.3, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Saturn', radius: Saturn_size, distance: dis + 6500 * distanceScale, orbitalPeriod: 10759, rotationPeriod: 0.44, texture: './textures/Planets/8k_saturn.jpg', color: 0xffd700, hasRing: true, beat: './audio/Saturn.mp3', inclination: 2.5, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Uranus', radius: Uranus_size, distance: dis + 7000 * distanceScale, orbitalPeriod: 30687, rotationPeriod: -0.72, texture: './textures/Planets/2k_uranus.jpg', color: 0x00ffff, beat: './audio/Uranus.mp3', inclination: 0.8, initialAngle: 0, orbitColor: 0xfffffff },
-    { name: 'Neptune', radius: Neptune_size, distance: dis + 8500 * distanceScale, orbitalPeriod: 60190, rotationPeriod: 0.67, texture: './textures/Planets/2k_neptune.jpg', color: 0x0000ff, beat: './audio/Neptune.mp3', inclination: 1.8, initialAngle: 0, orbitColor: 0xfffffff }
-  ];
+const planetData = [
+  { name: 'Mercury', radius: Mercury_size, distance: dis + 200 * distanceScale, orbitalPeriod: 88, rotationPeriod: 58.65, texture: './textures/Planets/8k_mercury.jpg', color: 0xaaaaaa, beat: './audio/Mercury.mp3', inclination: 7.0, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Venus', radius: Venus_size, distance: dis + 500 * distanceScale, orbitalPeriod: 224.7, rotationPeriod: -243, texture: './textures/Planets/8k_venus_surface.jpg', color: 0xffd700, beat: './audio/Venus.mp3', inclination: 3.4, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Earth', radius: unitSize, distance: dis + 2500 * distanceScale, orbitalPeriod: 365.25, rotationPeriod: 1, texture: './textures/Earth/8k_earth_daymap.jpg', color: 0x00ff00, beat: './audio/Earth.mp3', inclination: 0.0, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Mars', radius: Mars_size, distance: dis + 3500 * distanceScale, orbitalPeriod: 687, rotationPeriod: 1.03, texture: './textures/Planets/8k_mars.jpg', color: 0xff4500, beat: './audio/Mars.mp3', inclination: 1.9, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Jupiter', radius: Jupiter_size, distance: dis + 5500 * distanceScale, orbitalPeriod: 4333, rotationPeriod: 0.41, texture: './textures/Planets/8k_jupiter.jpg', color: 0xffa500, beat: './audio/Jupiter.mp3', inclination: 1.3, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Saturn', radius: Saturn_size, distance: dis + 6500 * distanceScale, orbitalPeriod: 10759, rotationPeriod: 0.44, texture: './textures/Planets/8k_saturn.jpg', color: 0xffd700, hasRing: true, beat: './audio/Saturn.mp3', inclination: 2.5, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Uranus', radius: Uranus_size, distance: dis + 7000 * distanceScale, orbitalPeriod: 30687, rotationPeriod: -0.72, texture: './textures/Planets/2k_uranus.jpg', color: 0x00ffff, beat: './audio/Uranus.mp3', inclination: 0.8, initialAngle: 0, orbitColor: 0xfffffff },
+  { name: 'Neptune', radius: Neptune_size, distance: dis + 8500 * distanceScale, orbitalPeriod: 60190, rotationPeriod: 0.67, texture: './textures/Planets/2k_neptune.jpg', color: 0x0000ff, beat: './audio/Neptune.mp3', inclination: 1.8, initialAngle: 0, orbitColor: 0xfffffff }
+];
+  const asteroidTexture = loader.load('./Asteroid/vesta_dawn_fc_hamo_mosaic_global_1024.jpg');
+
+  function createAsteroid(size, distance, angle) {
+    const asteroidGeo = new THREE.SphereGeometry(size, 16, 16);
+    const asteroidMat = new THREE.MeshBasicMaterial({
+      map: asteroidTexture,
+      roughness: 0.8,
+      metalness: 0.2,
+    });
+    const asteroidMesh = new THREE.Mesh(asteroidGeo, asteroidMat);
+    
+    asteroidMesh.position.x = Math.cos(angle) * distance;
+    asteroidMesh.position.z = Math.sin(angle) * distance;
+    asteroidMesh.position.y = (Math.random() - 0.5) * 50; // Add some vertical variation
+    
+    return asteroidMesh;
+  }
   const planets = [];
   const orbitMeshes = [];
 
@@ -248,8 +266,7 @@ const distanceScale = 10;
     const planetMesh = new THREE.Mesh(planetGeo, planetMat);
     planetMesh.castShadow = true;
     planetMesh.receiveShadow = true;
-    planetMesh.layers.set(ENTIRE_SCENE);
-
+    
     // Outline creation
     const outlineGeometry = new THREE.BufferGeometry();
     const outlinePoints = [];
@@ -336,13 +353,27 @@ const distanceScale = 10;
     planets.push(planetMesh);
     orbitMeshes.push(orbitObject);
   });
+  
+  const asteroidBelt = new THREE.Object3D();
+  const numAsteroids = 2000;
+  const asteroidBeltStart = dis + 4000 * distanceScale; // Just after Mars
+  const asteroidBeltEnd = dis + 5000 * distanceScale; // Before Jupiter
+  
+  for (let i = 0; i < numAsteroids; i++) {
+    const distance = asteroidBeltStart + Math.random() * (asteroidBeltEnd - asteroidBeltStart);
+    const angle = Math.random() * Math.PI * 2;
+    const size = Math.random() * 100 + 5; // Random size between 5 and 25
+    const asteroid = createAsteroid(size, distance, angle);
+    asteroidBelt.add(asteroid);
+  }
+  scene.add(asteroidBelt);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
+  controls.dampingFactor = 0.09;
   controls.screenSpacePanning = false;
-  controls.minDistance = 100;
-  controls.maxDistance = 1000000;
+  controls.minDistance = 400;
+  controls.maxDistance = 125000;
   let selectedPlanet = null;
   let isFocused = false;
 
@@ -590,6 +621,9 @@ planetButtons.forEach(button => {
       planet.rotation.y += (deltaTime / planet.userData.rotationPeriod) * Math.PI * 2 * 0.01;
     });
   
+    // Rotate the asteroid belt
+    asteroidBelt.rotation.y += deltaTime * 0.05; // Adjust rotation speed as needed
+  
     if (isFocused && selectedPlanet && !animationInProgress) {
       updateCameraPosition(deltaTime);
     } else if (!animationInProgress) {
@@ -598,7 +632,6 @@ planetButtons.forEach(button => {
   
     renderScenes();
     requestAnimationFrame(animate);
-
   }
 
   function renderScenes() {
