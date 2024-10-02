@@ -431,7 +431,7 @@ const planetData = [
     animationInProgress = true;
   
     const startTime = performance.now();
-    const duration = 3000; // 3 seconds
+    const duration = 10000; // 3 seconds
   
     function easeInOutCubic(t) {
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
