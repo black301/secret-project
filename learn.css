@@ -1,112 +1,141 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
 }
 
-body{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-width: 100vh;
-    background: #111;
+body {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f4f4f4;
 }
 
-.container{
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 0;
-    flex-wrap: wrap;
+.card-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 500px;
 }
 
-.container .box{
-    position: relative;
-    width: 320px;
-    height: 300px;
-    color: #fff;
-    background: #111;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 20px 30px;
-    transition: 0.5s;
+.profile-card {
+  width: 100%;
+  height: 300px;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
 }
 
-.container .box:hover{
-    transform: translateY(-20px);
+.profile-card:hover {
+  transform: translateY(-20px);
+  transition: 0.5s;
 }
 
-.container .box::before{
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, #FCD900 , #ff0058);
+.profile-card.is-flipped {
+  transform: rotateY(180deg);
 }
 
-.container .box::after{
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, #FCD900 , #ff0058);
-    filter: blur(30px);
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border-radius: 24px;
+  padding: 25px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
 }
 
-.container .box span{
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    right: 6px;
-    bottom: 6px;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 2;
+.card-back {
+  transform: rotateY(180deg);
 }
 
-.container .box span::before{
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 50%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    pointer-events: none;
+.card-front::before, .card-back::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 30%;
+  width: 100%;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(45deg, #001f3f, #0077be);
+  z-index: 0;
 }
 
-.container .box .content{
-    position: relative;
-    z-index: 10;
-    padding: 20px 40px;
-
+.card-title {
+  position: absolute;
+  top: 35px;
+  left: 120px;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 600;
+  z-index: 1;
 }
 
-.container .box .content h2{
-    font-size: 2em;
-    color: #fff;
-    margin-bottom: 10px;
+.image {
+  position: absolute;
+  top: 45px;
+  left: 25px;
+  height: 110px; 
+  width: 110px;  
+  margin-bottom: 10px;
+  z-index: 1;
 }
 
-.container .box .content p{
-    font-size: 1.1em;
-    color: #fff;
-    margin-bottom: 10px;
-    line-height: 1.4em;
+.image .profile-img {
+  height: 80%;
+  width: 80%;
+  object-fit: contain;
 }
 
-.container .box .content a{
-    display: inline-block;
-    font-size: 1.1em;
-    color: #111;
-    background: #fff;
-    padding: 10px;
-    text-decoration: none;
-    font-weight: 700;
+.buttons {
+  display: flex;
+  align-items: center;
+  margin-top: 25px;
+  margin-left: 70px;
+  z-index: 1;
+}
+
+.button {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 400;
+  border: none;
+  border-radius: 24px;
+  margin: 0 10px;
+  margin-left: 270px;
+  padding: 8px 14px;
+  background: linear-gradient(45deg, #001f3f, #0077be);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button:hover {
+  opacity: 0.8;
+}
+
+.card-front .content {
+  align-items: start;
+  margin-top: 130px;
+  margin-left: 17px;
+  text-align: left;
+  z-index: 1;
+}
+
+.card-back .content {
+  align-items: start;
+  margin-top: 130px;
+  margin-left: 17px;
+  text-align: left;
+  z-index: 1;
+}
+
+.content p {
+  color: #111;
+  font-size: 17px;
+  margin-bottom: 10px;
 }
