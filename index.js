@@ -145,9 +145,9 @@ function initScene() {
   const renderScene = new RenderPass(scene, camera);
 
   const bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 1.5, 0.4, 0.85);
-  // bloomPass.threshold = 0.09;
-  // bloomPass.strength = 1;
-  // bloomPass.radius = 0.09;
+  bloomPass.threshold = 0.3;
+  bloomPass.strength = 2.5;
+  bloomPass.radius = 1;
 
   const bloomComposer = new EffectComposer(renderer);
 
