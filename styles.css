@@ -242,3 +242,14 @@ body {
     opacity: 0;
     transition: opacity 1s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
+
+#introVideo {
+    position: fixed; 
+    top: 0;          
+    left: 0;         
+    width: 100vw;    
+    height: 100vh;   
+    z-index: 9999;   
+    object-fit: cover; /* Ensure the video covers the entire area */
+    display: none;     /* Initially hidden */
+}
